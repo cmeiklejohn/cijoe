@@ -82,7 +82,7 @@ class CIJoe
     @campfire.notify(@last_build) if @campfire.valid?
 
     # another build waits
-    if !repo_config.buildallfile.to_s.empty? && File.exist?(repo_config.buildallfile.to_s)
+    if !repo_config[:buildallfile].empty? && File.exist?(repo_config[:buildallfile])
       # clean out before new build
       FileUtils.rm(repo_config.buildallfile.to_s)
       build
@@ -94,7 +94,7 @@ class CIJoe
   def build(branch=nil)
     if building?
       # only if switched on to build all incoming requests
-      if !repo_config.buildallfile.to_s.empty?
+      if !repo_config[:buildallfile].empty?
         # and there is no previous request
         return if File.exist?(repo_config.buildallfile.to_s)
         # we will mark awaiting builds
@@ -153,7 +153,7 @@ class CIJoe
 
   # shellin' out
   def runner_command
-    runner = repo_config.runner.to_s
+    runner = repo_config[:runner]
     runner == '' ? "rake -s test:units" : runner
   end
 
@@ -172,7 +172,7 @@ class CIJoe
 
   def git_branch
     return @git_branch if @git_branch
-    branch = repo_config.branch.to_s
+    branch = repo_config[:branch]
     @git_branch = branch == '' ? "master" : branch
   end
 
@@ -225,7 +225,12 @@ class CIJoe
   end
 
   def repo_config
-    Config.cijoe(@project_path)
+    repo_config = Config.new('cijoe', @project_path)
+    @config = { 
+      :buildallfile => repo_config.buildallfile.to_s,
+      :runner       => repo_config.runner.to_s,
+      :branch       => repo_config.branch.to_s
+    }
   end
 
   # load build info from file.
